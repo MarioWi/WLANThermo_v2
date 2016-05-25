@@ -28,6 +28,7 @@ import RPi.GPIO as GPIO
 import urllib
 import psutil
 import signal
+from wlt_2_telegram import *
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -346,6 +347,28 @@ Email_STARTTLS = Config.getboolean ('Email','starttls')
 WhatsApp_alert = Config.getboolean('WhatsApp','whatsapp_alert')
 WhatsApp_number = Config.get('WhatsApp','whatsapp_number')
 
+#Einlesen Telegram-Parameter fuer Alarmmeldung
+Telegram_alert = Config.getboolean('Telegram','telegram_alert')
+Telegram_token = urllib.unquote(Config.get('Telegram','telegram_token'))
+Telegram_Chat_ID = int(Config.get('Telegram','telegram_chat_id'))
+#Erstellung Bot wenn aktiviert / wenn deaktiviert Bot auf Null setzen
+global bot
+if Telegram_alert:
+	try:
+		bot = telepot.Bot(Telegram_token)
+		telegram = Telegram(Telegram_token,bot,Telegram_Chat_ID)
+		bot.message_loop(telegram.handle)
+	except:
+		logger.debug('Error: Telegram-Bot konnte nicht erstellt werden! :  {err}')
+else:
+	bot = None
+	telegram = None
+
+#Einlesen Test_Alarm
+Test_Alarm = Config.getboolean('Test_Alarm','test_alarm')
+Test_Alarm_Text = urllib.unquote(Config.get('Test_Alarm','test_alarm_text'))
+	
+
 #Einlesen der Software-Version
 command = 'cat /var/www/header.php | grep \'] = "V\' | cut -c31-38'
 
@@ -469,6 +492,25 @@ Alarm_state_low_previous = 0
 Temperatur = [0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10]
 
 alarm_state = [None, None, None, None, None, None, None, None]
+
+# Test-Alarm senden
+if Test_Alarm:												# wenn Testnachricht senden aktiviert
+	logger.debug('Test-Alarm, versende Nachrichten')
+	Text = str(Test_Alarm_Text)								# Teststring auslesen
+	if Email_alert: 										#wenn konfiguriert, Testnachricht per email schicken
+		alarm_email(Email_server,Email_user,Email_password, Email_STARTTLS, Email_from, Email_to, 'Test-Alarm', Text)
+	if WhatsApp_alert:	 									#wenn konfiguriert, Testnachricht per WhatsApp schicken
+		cmd="/usr/sbin/sende_whatsapp.sh " + WhatsApp_number + " '" + Text + "'"
+		os.system(cmd)
+	if Telegram_alert: 										# wenn konfiguriert Testnachricht per Telegram schicken
+		try:
+			bot.sendMessage(Telegram_Chat_ID, Text)				# Teststring mit Telegram-Bot versenden
+		except:
+			logger.debug('Test-Alarm, Telegram Nachricht konnte nicht versendet werden')
+	cfgfile = open('/var/www/conf/WLANThermo.conf','w')		# Config mit schreibrecht öffnen
+	Config.set('Test_Alarm','test_alarm',False)				# Testnachricht senden auf False setzen
+	Config.write(cfgfile)									# Cofig schreiben
+	cfgfile.close()											# Config schließen
 
 try:
     while True: #Messchleife
@@ -618,6 +660,12 @@ try:
             if WhatsApp_alert: #wenn konfiguriert, Alarm per WhatsApp schicken
                 cmd="/usr/sbin/sende_whatsapp.sh " + WhatsApp_number + " '" + Alarm_message + "'"
                 os.system(cmd)
+            if Telegram_alert: #wenn konfiguriert (und eine Chat-ID eingegeben), Alarm per Telegram schicken
+                if Telegram_Chat_ID != 0:
+					try:
+						bot.sendMessage(Telegram_Chat_ID, Alarm_message)
+					except:
+						logger.debug('Alarm, Telegram Nachricht konnte nicht versendet werden')
             if PUSH:
                 Alarm_message2 = urllib.quote(Alarm_message)
                 push_cmd =  PUSH_URL.replace('messagetext', Alarm_message2.replace('\n', '<br/>'))

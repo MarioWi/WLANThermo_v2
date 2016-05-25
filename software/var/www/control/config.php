@@ -127,7 +127,50 @@ if(isset($_POST["save"])) {
 				$ini['WhatsApp']['whatsapp_alert'] = $_POST['whatsapp_alert'];
 				$restart = "1";
 			}
+
+			// ######################################################################
+			// Telegram Einstellungen -----------------------------------------------
+			// ######################################################################
 			
+			// Telegram Token
+			if (isset($_POST['telegram_token'])) {
+				if(rawurldecode($ini['Telegram']['telegram_token']) !== rawurlencode($_POST['telegram_token'])){
+					$ini['Telegram']['telegram_token'] = rawurlencode($_POST['telegram_token']);
+					$restart = "1";
+				}
+			}
+			// Telegram Chat ID
+			if (isset($_POST['telegram_chat_id'])) {
+				if($ini['Telegram']['telegram_chat_id'] !== $_POST['telegram_chat_id']){
+					$ini['Telegram']['telegram_chat_id'] = $_POST['telegram_chat_id'];
+					$restart = "1";
+				}
+			}
+			// Telegram Benachrichtigung Aktivieren/Deaktivieren
+			if(isset ($_POST['telegram_alert'])) {$_POST['telegram_alert'] = "True"; }else{ $_POST['telegram_alert'] = "False";}
+			if($ini['Telegram']['telegram_alert'] !== $_POST['telegram_alert']){
+				$ini['Telegram']['telegram_alert'] = $_POST['telegram_alert'];
+				$restart = "1";
+			}
+
+			// ######################################################################
+			// Test-Alarm Einstellungen ---------------------------------------------
+			// ######################################################################
+			
+			// Test-Alarm senden
+			if(isset ($_POST['test_alarm'])) {$_POST['test_alarm'] = "True"; }else{ $_POST['test_alarm'] = "False";}
+			if($ini['Test_Alarm']['test_alarm'] !== $_POST['test_alarm']){
+				$ini['Test_Alarm']['test_alarm'] = $_POST['test_alarm'];
+				$restart = "1";
+			}
+			// Test-Nachricht
+			if (isset($_POST['test_alarm_text'])) {
+				if(rawurldecode($ini['Test_Alarm']['test_alarm_text']) !== rawurlencode($_POST['test_alarm_text'])){
+					$ini['Test_Alarm']['test_alarm_text'] = rawurlencode($_POST['test_alarm_text']);
+					$restart = "1";
+				}
+			}
+						
 			// ######################################################################
 			// Email Einstellungen --------------------------------------------------
 			// ######################################################################
@@ -572,6 +615,34 @@ if(isset($_POST["save"])) {
 			<div class="config_text row_1 col_3"><input type="text" onkeyup="this.value=this.value.replace(/[^0-9]/g,'');" name="whatsapp_number" id="whatsapp_number" size="27" maxlength="27" value="<?php echo $ini['WhatsApp']['whatsapp_number'];?>"></div>
 			<div class="config_text row_1 col_6">WhatsApp aktivieren:</div>			
 			<div class="config_text row_1 col_7"><input type="checkbox" name="whatsapp_alert" id="whatsapp_alert" value="True" <?php if($ini['WhatsApp']['whatsapp_alert'] == "True") {echo "checked=\"checked\"";}?> ></div>
+		</div>
+<?php
+// ##################################################################################
+// Formular Telegram Einstellungen --------------------------------------------------
+// ##################################################################################	
+?>
+		<div class="config small">
+			<div class="headline">Telegram Einstellungen</div>
+			<div class="headicon"><img src="../images/icons16x16/telegram.png" alt=""></div>
+			<div class="config_text row_1 col_1">Telegram token:</div>
+			<div class="config_text row_2 col_3"><input type="password" name="telegram_token" id="telegram_token" size="35" maxlength="48" value="<?php echo (rawurldecode($ini['Telegram']['telegram_token']));?>"></div>
+			<div class="config_text row_1 col_6">Telegram aktivieren:</div>			
+			<div class="config_text row_1 col_7"><input type="checkbox" name="telegram_alert" id="telegram_alert" value="True" <?php if($ini['Telegram']['telegram_alert'] == "True") {echo "checked=\"checked\"";}?> ></div>
+			<div class="config_text row_3 col_1">Chat ID:</div>
+			<div class="config_text row_3 col_3"><input type="text" onkeyup="this.value=this.value.replace(/[^0-9-]/g,'');" name="telegram_chat_id" id="telegram_chat_id" size="24" maxlength="25" value="<?php echo $ini['Telegram']['telegram_chat_id'];?>"></div>
+		</div>
+<?php
+// ##################################################################################
+// Formular Test - Alarm ------------------------------------------------------------
+// ##################################################################################	
+?>
+		<div class="config little">
+			<div class="headline">Test-Alarm Einstellungen</div>
+			<div class="headicon"><img src="../images/icons16x16/test_alarm.png" alt=""></div>
+			<div class="config_text row_1 col_1">Text:</div>
+			<div class="config_text row_1 col_3"><input type="text" name="test_alarm_text" id="test_alarm_text" size="18" maxlength="50" value="<?php echo rawurldecode($ini['Test_Alarm']['test_alarm_text']);?>"></div>
+			<div class="config_text row_1 col_6">Test-Alarm aktivieren:</div>			
+			<div class="config_text row_1 col_7"><input type="checkbox" name="test_alarm" id="test_alarm" value="True" <?php if($ini['Test_Alarm']['test_alarm'] == "True") {echo "checked=\"checked\"";}?> ></div>
 		</div>
 <?php
 // ##################################################################################
