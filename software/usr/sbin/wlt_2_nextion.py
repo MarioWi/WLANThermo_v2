@@ -1,4 +1,4 @@
-﻿#!/usr/bin/python
+#!/usr/bin/python
 # coding=utf-8
 
 # Copyright (c) 2015, 2016 Björn Schrader
@@ -530,7 +530,7 @@ def temp_getvalues():
         temps = dict()
         temps['timestamp'] = timestamp = time.mktime(time.strptime(temps_raw[0],'%d.%m.%y %H:%M:%S'))
         for count in range(8):
-            temps[count] = {'value': temps_raw[count+1], 'alert': temps_raw[count+9]}
+            temps[count] = {'value': str(round(float(temps_raw[count+1]),1)) + '\xb0C', 'alert': temps_raw[count+9]}
     else:
         return None
     
@@ -836,7 +836,7 @@ def NX_display():
     # Version des Displays prüfen
     display_version = str(NX_getvalue('main.version.txt'))
     logger.info('Version auf dem Display: ' + str(display_version))
-    if not str(display_version) in ['v1.3']:
+    if not str(display_version) in ['v1.6']:
         logger.info('Update des Displays notwendig')
         NX_sendcmd('page update')
         open('/var/www/tmp/nextionupdate', 'w').close()
@@ -888,17 +888,17 @@ def NX_display():
     
     values = dict()
     for i in range(1, 11):
-        values['main.sensor_name' + str(i) + '.txt:10'] = sensors[i]['name']
+        values['main.sensor_name' + str(i) + '.txt:10'] = sensors[i]['name'].decode('utf-8').encode('latin-1')
     for i in range(8):
-        if temps[i]['value'] == '999.9':
-            values['main.kanal' + str(i) + '.txt:10'] = channels[i]['name']
+        if temps[i]['value'] == '999.9\xb0C':
+            values['main.kanal' + str(i) + '.txt:10'] = channels[i]['name'].decode('utf-8').encode('latin-1')
         else:
             values['main.kanal' + str(i) + '.txt:10'] = temps[i]['value']
         values['main.alert' + str(i) + '.txt:10'] = temps[i]['alert']
         values['main.al' + str(i) + 'minist.txt:10'] = int(round(channels[i]['temp_min']))
         values['main.al' + str(i) + 'maxist.txt:10'] = int(round(channels[i]['temp_max']))
         values['main.sensor_type' + str(i) + '.val'] = channels[i]['sensor']
-        values['main.name' + str(i) + '.txt:10'] = channels[i]['name']
+        values['main.name' + str(i) + '.txt:10'] = channels[i]['name'].decode('utf-8').encode('latin-1')
     for interface in interfaces:
         values['wlaninfo.' + interfaces[interface]['name'] + '.txt:20'] = interfaces[interface]['ip']
     values['main.pit_ch.val'] = int(pitconf['ch'])
@@ -1085,8 +1085,8 @@ def NX_display():
                 temps_event.clear()
                 for i in range(8):
                     if temps[i]['value'] != new_temps[i]['value']:
-                        if new_temps[i]['value'] == '999.9':
-                            values['main.kanal' + str(i) + '.txt:10'] = channels[i]['name']
+                        if new_temps[i]['value'] == '999.9\xb0C':
+                            values['main.kanal' + str(i) + '.txt:10'] = channels[i]['name'].decode('utf-8').encode('latin-1')
                         else:
                             values['main.kanal' + str(i) + '.txt:10'] = new_temps[i]['value']
                     
@@ -1165,9 +1165,9 @@ def NX_display():
                 if channels[i]['sensor'] != new_channels[i]['sensor']:
                     values['main.sensor_type' + str(i) + '.val'] = new_channels[i]['sensor']
                 if channels[i]['name'] != new_channels[i]['name']:
-                    values['main.name' + str(i) + '.txt:10'] = new_channels[i]['name']
-                    if new_temps[i]['value'] == '999.9':
-                        values['main.kanal' + str(i) + '.txt:10'] = new_channels[i]['name']
+                    values['main.name' + str(i) + '.txt:10'] = new_channels[i]['name'].decode('utf-8').encode('latin-1')
+                    if new_temps[i]['value'] == '999.9\xb0C':
+                        values['main.kanal' + str(i) + '.txt:10'] = new_channels[i]['name'].decode('utf-8').encode('latin-1')
             
             if NX_sendvalues(values):
                 channels = new_channels

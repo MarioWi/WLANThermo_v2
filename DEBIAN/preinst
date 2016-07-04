@@ -1,0 +1,26 @@
+#! /bin/sh
+# preinst script for wlanthermo
+
+if [ -f /usr/sbin/wlt_2_comp.py ]
+then
+  sudo service WLANThermo stop
+  sudo service WLANThermoWD stop
+  # Vor 2.4.0-0
+  sudo service pigpiod stop
+  # danach
+  sudo systemctl stop pigpiod.service
+fi
+
+killall python
+
+if [ -f /var/www/conf/WLANThermo.conf ]
+then
+    echo Sichere alte Konfiguration
+    cp /var/www/conf/WLANThermo.conf /var/www/conf/WLANThermo.conf.old_
+    echo 'Patche alte Konfiguration ("pit_iterm_min")'
+    sudo sed -i.bak "s/pit_iterm_min = 35/pit_iterm_min = 0/g" /var/www/conf/WLANThermo.conf.old_
+    mv /var/www/conf/WLANThermo.conf.old_ /var/www/conf/WLANThermo.conf.old
+    cp /var/www/conf/sensor.conf /var/www/conf/sensor.conf.old
+else
+    echo Noch keine Konfiguration vorhanden!
+fi
